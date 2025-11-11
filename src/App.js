@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import LightweightChart from './LightweightChart';
+import { fetchPolygonData } from './api/polygon';
 
 const App = () => {
-  const dummyData = [
-    { time: '2023-01-01', value: 100 },
-    { time: '2023-01-02', value: 105 },
-    { time: '2023-01-03', value: 102 },
-  ];
+  const [chartData, setChartData] = useState([]);
+
+  useEffect(() => {
+    fetchPolygonData('AAPL').then(setChartData);
+  }, []);
 
   return (
     <div style={{ padding: '2rem', color: '#ccc' }}>
-      <h2>THGP Charting Platform</h2>
-      <p>Lightweight Chart will render here once component is added.</p>
-      <pre>{JSON.stringify(dummyData, null, 2)}</pre>
+      <h2>Openedge Dashboard</h2>
+      <p>Scalp-focused ICC charting platform with ChartEye overlays</p>
+      <LightweightChart data={chartData} />
     </div>
   );
 };
