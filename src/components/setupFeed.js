@@ -1,43 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { getSetupLog } from '../alerts/setupLogger';
+import React, { useEffect, useState } from 'react';
+import LightweightChart from '../LightweightChart';
+import SetupFeed from '../components/setupFeed';
+import { fetchPolygonData } from '../api/polygon';
 
-const SetupFeed = () => {
-  const [setups, setSetups] = useState([]);
+const App = () => {
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    const log = getSetupLog();
-    setSetups(log);
+    fetchPolygonData('AAPL').then(setChartData);
   }, []);
 
-  const copyTags = (tags) => {
-    navigator.clipboard.writeText(tags);
-    alert('📋 TraderVue tags copied to clipboard!');
-  };
-
   return (
-    <div style={{ maxHeight: '400px', overflowY: 'scroll', padding: '1rem', border: '1px solid #ccc' }}>
-      <h3>📈 ICC Setup Feed</h3>
-      {setups.length === 0 ? (
-        <p>No setups logged yet.</p>
-      ) : (
-        setups.map((setup, index) => (
-          <div key={index} style={{ marginBottom: '1rem', padding: '0.5rem', borderBottom: '1px solid #eee' }}>
-            <strong>{setup.dashboard}</strong> — {setup.source}
-            <br />
-            <span>💡 Tags: {setup.iccTags.join(', ')}</span>
-            <br />
-            <span>🕒 {setup.timestamp}</span>
-            <br />
-            <span>🏷️ TraderVue Tags: <code>{setup.tradervueTags}</code></span>
-            <br />
-            <button onClick={() => copyTags(setup.tradervueTags)} style={{ marginTop: '0.5rem' }}>
-              📋 Copy Tags
-            </button>
-          </div>
-        ))
-      )}
+    <div style={{ padding: '2rem', color: '#ccc' }}>
+      <h2>Openedge Dashboard</h2>
+      <p>Scalp-focused ICC charting platform with ChartEye overlays</p>
+      <LightweightChart data={chartData} />
+      <hr />
+      <SetupFeed />
     </div>
   );
 };
 
-export default SetupFeed;
+export default App;
