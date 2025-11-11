@@ -1,5 +1,4 @@
 // Frontend-safe ICC setup logger using in-memory array
-
 const setupLog = [];
 
 export const logSetup = (setup) => {
@@ -13,10 +12,8 @@ export const logSetup = (setup) => {
     timeBlock: setup.timeBlock,
     outcome: setup.outcome || 'pending',
   };
-
   setupLog.push(entry);
   console.log('✅ Setup logged:', entry);
 };
 
-// Optional: expose log for display or debugging
 export const getSetupLog = () => setupLog;
