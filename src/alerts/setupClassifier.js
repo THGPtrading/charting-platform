@@ -1,7 +1,9 @@
-// Tags incoming alerts with ICC logic before routing
+// Tags incoming alerts with ICC logic and auto-generates TraderVue tags
+
+import { generateTags } from './tagGenerator';
 
 export const classifySetup = (alert) => {
-  const { source, priceAction, volume, timeBlock } = alert;
+  const { source, priceAction, volume, timeBlock, dashboard, price } = alert;
 
   const tags = [];
 
@@ -18,11 +20,14 @@ export const classifySetup = (alert) => {
     tags.push('swing-zone');
   }
 
-  // 🔧 Future: Add ChartEye AI overlays, TrendSpider zones, bot signals
-
-  return {
+  const classified = {
     ...alert,
     iccTags: tags,
     classifiedAt: new Date().toISOString(),
   };
+
+  // 🔗 Auto-attach TraderVue-compatible tags
+  classified.tradervueTags = generateTags(classified);
+
+  return classified;
 };
