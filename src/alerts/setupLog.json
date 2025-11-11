@@ -1,9 +1,4 @@
-// Appends ICC-tagged alerts to setupLog.json for traceability and review
-
-import fs from 'fs';
-import path from 'path';
-
-const logPath = path.resolve(__dirname, 'setupLog.json');
+const setupLog = [];
 
 export const logSetup = (setup) => {
   const entry = {
@@ -16,14 +11,3 @@ export const logSetup = (setup) => {
     timeBlock: setup.timeBlock,
     outcome: setup.outcome || 'pending',
   };
-
-  try {
-    const raw = fs.readFileSync(logPath);
-    const log = JSON.parse(raw);
-    log.push(entry);
-    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
-    console.log('✅ Setup logged successfully');
-  } catch (err) {
-    console.error('⚠️ Error logging setup:', err);
-  }
-};
