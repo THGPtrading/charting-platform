@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2025-11-11T00:15:00Z",
+    "source": "ChartEye",
+    "dashboard": "Openedge",
+    "iccTags": ["scalp-ready", "gap-retest"],
+    "price": 142.35,
+    "volume": 120000,
+    "timeBlock": "open",
+    "outcome": "manual-entry"
+  },
+  {
+    "timestamp": "2025-11-11T00:18:00Z",
+    "source": "TrendSpider",
+    "dashboard": "Swinggrid",
+    "iccTags": ["swing-zone", "zone-retest"],
+    "price": 146.80,
+    "volume": 300000,
+    "timeBlock": "midday",
+    "outcome": "bot-executed"
+  }
+]
