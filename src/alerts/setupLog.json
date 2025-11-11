@@ -1,22 +1,29 @@
-[
-  {
-    "timestamp": "2025-11-11T00:15:00Z",
-    "source": "ChartEye",
-    "dashboard": "Openedge",
-    "iccTags": ["scalp-ready", "gap-retest"],
-    "price": 142.35,
-    "volume": 120000,
-    "timeBlock": "open",
-    "outcome": "manual-entry"
-  },
-  {
-    "timestamp": "2025-11-11T00:18:00Z",
-    "source": "TrendSpider",
-    "dashboard": "Swinggrid",
-    "iccTags": ["swing-zone", "zone-retest"],
-    "price": 146.80,
-    "volume": 300000,
-    "timeBlock": "midday",
-    "outcome": "bot-executed"
+// Appends ICC-tagged alerts to setupLog.json for traceability and review
+
+import fs from 'fs';
+import path from 'path';
+
+const logPath = path.resolve(__dirname, 'setupLog.json');
+
+export const logSetup = (setup) => {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    source: setup.source,
+    dashboard: setup.dashboard,
+    iccTags: setup.iccTags,
+    price: setup.price,
+    volume: setup.volume,
+    timeBlock: setup.timeBlock,
+    outcome: setup.outcome || 'pending',
+  };
+
+  try {
+    const raw = fs.readFileSync(logPath);
+    const log = JSON.parse(raw);
+    log.push(entry);
+    fs.writeFileSync(logPath, JSON.stringify(log, null, 2));
+    console.log('✅ Setup logged successfully');
+  } catch (err) {
+    console.error('⚠️ Error logging setup:', err);
   }
-]
+};
