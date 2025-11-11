@@ -1,21 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import LightweightChart from './LightweightChart';
-import { fetchPolygonData } from './api/polygon';
+import React from 'react';
+import SetupFeed from '../components/setupFeed';
 
-const App = () => {
-  const [chartData, setChartData] = useState([]);
-
-  useEffect(() => {
-    fetchPolygonData('AAPL').then(setChartData);
-  }, []);
-
+function App() {
   return (
-    <div style={{ padding: '2rem', color: '#ccc' }}>
-      <h2>Openedge Dashboard</h2>
-      <p>Scalp-focused ICC charting platform with ChartEye overlays</p>
-      <LightweightChart data={chartData} />
+    <div style={{ padding: '2rem' }}>
+      <h2>📊 ICC Dashboard</h2>
+      <p>Real-time setup feed with TraderVue tagging</p>
+      <SetupFeed />
     </div>
   );
-};
+}
 
 export default App;
