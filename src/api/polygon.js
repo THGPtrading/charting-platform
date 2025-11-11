@@ -1,7 +1,6 @@
 // Basic Polygon.io fetch using free API key
 
-const API_KEY = 'const API_KEY = process.env.POLYGON_API_KEY;
-';
+const API_KEY = process.env.POLYGON_API_KEY;
 
 export const fetchPolygonData = async (ticker = 'AAPL') => {
   const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/minute/2023-01-01/2023-01-01?apiKey=${API_KEY}`;
