@@ -1,5 +1,3 @@
-// Tags incoming alerts with ICC logic and auto-generates TraderVue tags
-
 import { generateTags } from './tagGenerator';
 
 export const classifySetup = (alert) => {
@@ -7,7 +5,6 @@ export const classifySetup = (alert) => {
 
   const tags = [];
 
-  // 🔍 ICC Logic: Structure + Volume + Time
   if (priceAction === 'gap-retest' && volume > 100000) {
     tags.push('scalp-ready');
   }
@@ -26,7 +23,6 @@ export const classifySetup = (alert) => {
     classifiedAt: new Date().toISOString(),
   };
 
-  // 🔗 Auto-attach TraderVue-compatible tags
   classified.tradervueTags = generateTags(classified);
 
   return classified;
