@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ES2020",                  /* Modern JS output */
+    "module": "ESNext",                  /* Use latest module system */
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+
+    /* JSX / React */
+    "jsx": "react-jsx",                  /* React 17+ JSX transform */
+
+    /* Module Resolution */
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* Type Checking */
+    "strict": true,                      /* Enable all strict type checks */
+    "noImplicitAny": true,               /* Disallow implicit 'any' */
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Interop with JS */
+    "allowJs": true,                     /* Allow .js files in project */
+    "checkJs": false,                    /* Don’t type-check JS files */
+    "skipLibCheck": true,                /* Skip type checking of node_modules */
+
+    /* Paths & Output */
+    "baseUrl": "./src",                  /* Simplify imports relative to src */
+    "outDir": "./dist",                  /* Compiled output directory */
+    "sourceMap": true,                   /* Generate source maps for debugging */
+    "noEmit": true                       /* Don’t emit files (CRA handles bundling) */
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
