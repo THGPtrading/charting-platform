@@ -7,6 +7,7 @@ import WarriorEdge from "./pages/WarriorEdge";
 import DefaultDashboard from "./pages/DefaultDashboard";
 import ICCTracker from "./pages/ICCTracker";
 import ICCPage from "./pages/ICCPage";
+import { isMarketOpenNow } from "./utils/marketHours";
 
 const TabLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
   <NavLink
@@ -28,9 +29,23 @@ const App: React.FC = () => {
   const isProd = process.env.NODE_ENV === "production";
   const showInternal = !isProd || process.env.REACT_APP_SHOW_INTERNAL === "1";
   const defaultRoute = isProd ? "/trendedge" : "/summary";
+  const hoursGate = process.env.REACT_APP_MARKET_HOURS_ONLY === "1" || process.env.REACT_APP_MARKET_HOURS_ONLY === "true";
+  const offHours = hoursGate && !isMarketOpenNow();
   return (
     <BrowserRouter>
       <div style={{ backgroundColor: "#121212", minHeight: "100vh" }}>
+        {offHours && (
+          <div style={{
+            background: "#2a2a2a",
+            color: "#e0e0e0",
+            padding: "8px 12px",
+            textAlign: "center",
+            borderBottom: "1px solid #333",
+            fontSize: 13,
+          }}>
+            Live data paused outside configured market hours. Showing mock or cached data.
+          </div>
+        )}
         <nav
           style={{
             display: "flex",
