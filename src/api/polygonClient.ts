@@ -1,8 +1,9 @@
 // src/api/polygonClient.ts
 
-const API_KEY: string | undefined = process.env.REACT_APP_POLYGON_API_KEY;
 import { isMarketOpenNow } from "../utils/marketHours";
 import { shiftCandlesToRealtime } from "../utils/timeSync";
+
+const API_KEY: string | undefined = process.env.REACT_APP_POLYGON_API_KEY;
 const BASE_URL = "https://api.polygon.io";
 
 export interface PolygonCandle {
