@@ -292,14 +292,19 @@ const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syn
     // Handle window resize to maintain chart dimensions and axis visibility
     const handleResize = () => {
       if (containerRef.current && chart) {
+        // Use requestAnimationFrame to ensure DOM has settled
         requestAnimationFrame(() => {
           if (containerRef.current && chart) {
             const rect = containerRef.current.getBoundingClientRect();
             const newWidth = Math.max(100, Math.floor(rect.width));
             const newHeight = Math.max(100, Math.floor(rect.height));
-            chart.applyOptions({ width: newWidth, height: newHeight });
-            // Don't call fitContent - it can cause the axes to disappear
-            // The chart should maintain its current visible range
+            
+            // Only update if dimensions actually changed
+            const currentOptions = chart.options();
+            if (currentOptions.width !== newWidth || currentOptions.height !== newHeight) {
+              chart.applyOptions({ width: newWidth, height: newHeight });
+              chart.timeScale().fitContent();
+            }
           }
         });
       }
@@ -355,7 +360,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syn
   }, [ticker, candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: '#1a1a1a', borderBottom: '1px solid #333', flexShrink: 0 }}>
         <button
@@ -395,7 +400,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syn
       </div>
 
       {/* Chart container */}
-      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px', width: '100%', overflow: 'hidden' }}>
+      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: 0, width: '100%', overflow: 'hidden' }}>
         <div ref={guideRef} style={{ position: 'absolute', top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.2)', pointerEvents: 'none', display: 'none' }} />
         
         {/* Drawing overlay canvas */}
