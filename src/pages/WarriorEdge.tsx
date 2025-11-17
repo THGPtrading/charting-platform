@@ -4,7 +4,7 @@ import ChartHost from "../components/ChartHost";
 import ResizableGrid from "../components/ResizableGrid";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { lookupCompanyName } from "../utils/companyLookup";
-import { fetchPolygonCandles, mapTimeframe, ChartCandle } from "../api/polygonClient";
+import { fetchPolygonCandles, mapTimeframe, ChartCandle, wasLastFetchCached } from "../api/polygonClient";
 
 // Mock data generator for demo purposes when API is unavailable
 function generateMockCandles(count: number, startPrice: number = 150): ChartCandle[] {
@@ -37,6 +37,10 @@ const WarriorEdge: React.FC = () => {
   const [dataHour, setDataHour] = useState<ChartCandle[]>([]);
   const [dataFive, setDataFive] = useState<ChartCandle[]>([]);
   const [dataFifteen, setDataFifteen] = useState<ChartCandle[]>([]);
+  const [cachedDaily, setCachedDaily] = useState(false);
+  const [cachedHour, setCachedHour] = useState(false);
+  const [cachedFive, setCachedFive] = useState(false);
+  const [cachedFifteen, setCachedFifteen] = useState(false);
 
   const [feedData, setFeedData] = useState<ChartCandle[]>([]);
   const [reviewData, setReviewData] = useState<ChartCandle[]>([]);
@@ -54,29 +58,29 @@ const WarriorEdge: React.FC = () => {
   useEffect(() => {
     const { multiplier, timespan } = mapTimeframe(timeframeDaily);
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => setDataDaily(candles && candles.length > 0 ? candles : generateMockCandles(500, 150)))
-      .catch(() => setDataDaily(generateMockCandles(500, 150)));
+      .then(candles => { setDataDaily(candles && candles.length > 0 ? candles : generateMockCandles(500, 150)); setCachedDaily(wasLastFetchCached(ticker, multiplier, timespan)); })
+      .catch(() => { setDataDaily(generateMockCandles(500, 150)); setCachedDaily(false); });
   }, [ticker, timeframeDaily]);
 
   useEffect(() => {
     const { multiplier, timespan } = mapTimeframe(timeframeHour);
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => setDataHour(candles && candles.length > 0 ? candles : generateMockCandles(400, 150)))
-      .catch(() => setDataHour(generateMockCandles(400, 150)));
+      .then(candles => { setDataHour(candles && candles.length > 0 ? candles : generateMockCandles(400, 150)); setCachedHour(wasLastFetchCached(ticker, multiplier, timespan)); })
+      .catch(() => { setDataHour(generateMockCandles(400, 150)); setCachedHour(false); });
   }, [ticker, timeframeHour]);
 
   useEffect(() => {
     const { multiplier, timespan } = mapTimeframe(timeframeFive);
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => setDataFive(candles && candles.length > 0 ? candles : generateMockCandles(300, 150)))
-      .catch(() => setDataFive(generateMockCandles(300, 150)));
+      .then(candles => { setDataFive(candles && candles.length > 0 ? candles : generateMockCandles(300, 150)); setCachedFive(wasLastFetchCached(ticker, multiplier, timespan)); })
+      .catch(() => { setDataFive(generateMockCandles(300, 150)); setCachedFive(false); });
   }, [ticker, timeframeFive]);
 
   useEffect(() => {
     const { multiplier, timespan } = mapTimeframe(timeframeFifteen);
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => setDataFifteen(candles && candles.length > 0 ? candles : generateMockCandles(350, 150)))
-      .catch(() => setDataFifteen(generateMockCandles(350, 150)));
+      .then(candles => { setDataFifteen(candles && candles.length > 0 ? candles : generateMockCandles(350, 150)); setCachedFifteen(wasLastFetchCached(ticker, multiplier, timespan)); })
+      .catch(() => { setDataFifteen(generateMockCandles(350, 150)); setCachedFifteen(false); });
   }, [ticker, timeframeFifteen]);
 
   useEffect(() => {
@@ -168,7 +172,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeDaily} Chart</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeDaily} Chart {cachedDaily && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#ffd700' }}>50MA</span>
                     <span style={{ color: '#1e90ff' }}>200MA</span>
@@ -190,7 +194,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeHour} Chart</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeHour} Chart {cachedHour && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#ffd700' }}>50MA</span>
@@ -213,7 +217,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeFive} Chart</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeFive} Chart {cachedFive && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#9acd32' }}>RSI</span>
@@ -235,7 +239,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeFifteen} Chart</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeFifteen} Chart {cachedFifteen && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#ffd700' }}>50MA</span>

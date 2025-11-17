@@ -23,6 +23,7 @@ export interface ChartCandle {
 }
 
 // Simple localStorage cache for last-good candles per (ticker, multiplier, timespan)
+const lastFetchCachedByKey = new Map<string, boolean>();
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
@@ -86,14 +87,16 @@ export const fetchPolygonCandles = async (
   if (gate && !isMarketOpenNow()) {
     // Outside configured hours: serve cached snapshot if available
     const cached = loadCache(key, maxAgeMs);
-    if (cached && cached.length) return cached;
+    if (cached && cached.length) { lastFetchCachedByKey.set(key, true); return cached; }
+    lastFetchCachedByKey.set(key, false);
     return [];
   }
 
   if (!API_KEY) {
     console.error("Missing REACT_APP_POLYGON_API_KEY environment variable");
     const cached = loadCache(key, maxAgeMs);
-    if (cached && cached.length) return cached;
+    if (cached && cached.length) { lastFetchCachedByKey.set(key, true); return cached; }
+    lastFetchCachedByKey.set(key, false);
     return [];
   }
 
@@ -103,7 +106,8 @@ export const fetchPolygonCandles = async (
     if (!response.ok) {
       console.error("Polygon API error:", response.statusText);
       const cached = loadCache(key, maxAgeMs);
-      if (cached && cached.length) return cached;
+      if (cached && cached.length) { lastFetchCachedByKey.set(key, true); return cached; }
+      lastFetchCachedByKey.set(key, false);
       return [];
     }
 
@@ -118,12 +122,19 @@ export const fetchPolygonCandles = async (
       close: candle.c,
       volume: candle.v,
     }));
-    if (out.length) saveCache(key, out);
+    if (out.length) { saveCache(key, out); lastFetchCachedByKey.set(key, false); }
+    else lastFetchCachedByKey.set(key, false);
     return out;
   } catch (err) {
     console.error("Polygon fetch failed:", err);
     const cached = loadCache(key, maxAgeMs);
-    if (cached && cached.length) return cached;
+    if (cached && cached.length) { lastFetchCachedByKey.set(key, true); return cached; }
+    lastFetchCachedByKey.set(key, false);
     return [];
   }
 };
+
+export function wasLastFetchCached(ticker: string, multiplier: number, timespan: string): boolean {
+  const key = cacheKey(ticker, multiplier, timespan);
+  return !!lastFetchCachedByKey.get(key);
+}
