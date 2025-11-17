@@ -4,10 +4,57 @@
  * Get current Eastern Time timestamp (in seconds)
  */
 export function getCurrentETTimestamp(): number {
+  // Get current time in UTC
   const now = new Date();
-  const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
-  const etDate = new Date(etString);
-  return Math.floor(etDate.getTime() / 1000);
+  
+  // Format in ET timezone and parse back
+  const etString = now.toLocaleString("en-US", { 
+    timeZone: "America/New_York",
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  // Parse the ET string back to a Date (this will be interpreted in local timezone)
+  // So we need a different approach - use the timezone offset
+  
+  // Better approach: Get the offset between local time and ET
+  const utcTime = now.getTime();
+  
+  // Create a date formatter for ET
+  const etFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  // Get the parts
+  const parts = etFormatter.formatToParts(now);
+  const etParts: any = {};
+  parts.forEach(({ type, value }) => {
+    etParts[type] = value;
+  });
+  
+  // Construct ET date in UTC context (treat ET values as if they were UTC)
+  const etAsUtc = Date.UTC(
+    parseInt(etParts.year),
+    parseInt(etParts.month) - 1,
+    parseInt(etParts.day),
+    parseInt(etParts.hour),
+    parseInt(etParts.minute),
+    parseInt(etParts.second)
+  );
+  
+  return Math.floor(etAsUtc / 1000);
 }
 
 /**
