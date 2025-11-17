@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart, IChartApi, Time, CandlestickSeries, LineSeries, HistogramSeries, createSeriesMarkers } from 'lightweight-charts';
 import type { ChartCandle } from '../api/polygonClient';
+import { initializeLiveCandle, updateLiveCandle, LiveCandleState } from '../utils/liveCandle';
 
 // Simple global sync bus
 declare global { interface Window { __chartSync?: any } }
@@ -109,6 +110,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
   const lastTimeRef = useRef<number | null>(null);
   const lastCloseRef = useRef<number | null>(null);
   const perBarRef = useRef<number>(secondsPerBar(timeframe));
+  const liveCandleState = useRef<LiveCandleState | null>(null);
 
   const [drawMode, setDrawMode] = React.useState<boolean>(false);
   const [trendlines, setTrendlines] = React.useState<Array<{ x1: number; y1: number; x2: number; y2: number }>>([]);
@@ -171,7 +173,14 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
     });
     mainSeriesRef.current = cs;
     cs.setData(candles.map(c => ({ time: c.time as unknown as Time, open: c.open, high: c.high, low: c.low, close: c.close })) as any);
-    if (candles.length) { lastTimeRef.current = candles[candles.length-1].time; lastCloseRef.current = candles[candles.length-1].close; }
+    if (candles.length) { 
+      lastTimeRef.current = candles[candles.length-1].time; 
+      lastCloseRef.current = candles[candles.length-1].close; 
+      
+      // Initialize live candle state for real-time animation
+      const lastCandle = candles[candles.length - 1];
+      liveCandleState.current = initializeLiveCandle(lastCandle);
+    }
 
     // Overlays
     const closes = candles.map(c => c.close);
@@ -253,7 +262,40 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       } } catch {}
     });
 
-    return () => { try { unsub(); chart.remove(); } catch {} };
+    // Live candle animation
+    let animationFrame: number;
+    if (liveCandleState.current && mainSeriesRef.current) {
+      const animate = () => {
+        if (liveCandleState.current && mainSeriesRef.current) {
+          const intervalMinutes = timeframe === '1 Min' ? 1 :
+                                   timeframe === '5 Min' ? 5 :
+                                   timeframe === '10 Min' ? 10 :
+                                   timeframe === '15 Min' ? 15 :
+                                   timeframe === '30 Min' ? 30 :
+                                   timeframe === '1 Hr' ? 60 :
+                                   timeframe === '4 Hr' ? 240 :
+                                   timeframe === 'Daily' ? 1440 : 5;
+          
+          const liveCandle = updateLiveCandle(liveCandleState.current, intervalMinutes);
+          try {
+            mainSeriesRef.current.update({
+              time: liveCandle.time as unknown as Time,
+              open: liveCandle.open,
+              high: liveCandle.high,
+              low: liveCandle.low,
+              close: liveCandle.close,
+            });
+          } catch (e) { /* ignore */ }
+        }
+        animationFrame = requestAnimationFrame(animate);
+      };
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    return () => { 
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      try { unsub(); chart.remove(); } catch {} 
+    };
   }, [candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
 
   return (

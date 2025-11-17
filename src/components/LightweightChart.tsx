@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, LineData, Time, LineSeries, CandlestickSeries, createSeriesMarkers } from 'lightweight-charts';
 import type { ICCSetup } from '../types/ICC';
+import { initializeLiveCandle, updateLiveCandle, LiveCandleState } from '../utils/liveCandle';
 
 type Candle = { time: number | string; open: number; high: number; low: number; close: number; volume?: number };
 
@@ -12,12 +13,16 @@ interface LightweightChartProps {
     sessionZones?: boolean;
     triggers?: ICCSetup[];
   };
+  enableLiveCandle?: boolean; // Enable simulated real-time candle updates
 }
 
-const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays }) => {
+const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays, timeframe, enableLiveCandle = true }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const placeholderRef = useRef<any | null>(null);
+  const seriesRef = useRef<any | null>(null);
+  const liveCandleState = useRef<LiveCandleState | null>(null);
+  const [, setTick] = useState(0); // Force re-render for live updates
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -63,6 +68,7 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays }) =
         borderUpColor: '#26a69a', borderDownColor: '#ef5350',
         wickUpColor: '#26a69a', wickDownColor: '#ef5350',
       });
+      seriesRef.current = series;
       const mapped = (data as Candle[]).map(c => ({
         time: typeof c.time === 'number' ? (c.time as Time) : (Math.floor(new Date(c.time).getTime() / 1000) as Time),
         open: c.open,
@@ -71,6 +77,13 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays }) =
         close: c.close,
       }));
       series.setData(mapped as any);
+      
+      // Initialize live candle state from the last candle
+      if (enableLiveCandle && mapped.length > 0) {
+        const lastCandle = mapped[mapped.length - 1];
+        liveCandleState.current = initializeLiveCandle(lastCandle as any);
+      }
+      
       if (overlays?.triggers) {
         const markers = overlays.triggers.map(t => ({
           time: Math.floor(new Date((t as any).timestamp).getTime() / 1000) as Time,
@@ -85,11 +98,13 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays }) =
       // remove placeholder before adding real series
       try { if (placeholderRef.current) { chart.removeSeries?.(placeholderRef.current); placeholderRef.current = null; } } catch (e) { /* ignore */ }
       const series = chart.addSeries(LineSeries, { color: '#2196f3', lineWidth: 2 });
+      seriesRef.current = series;
       const formattedData: LineData[] = (data as { time: number | string; value: number }[]).map(d => ({
         time: typeof d.time === 'number' ? (d.time as Time) : (Math.floor(new Date(d.time).getTime() / 1000) as Time),
         value: d.value,
       }));
       series.setData(formattedData);
+      
       if (overlays?.triggers) {
         const markers = overlays.triggers.map(t => ({
           time: Math.floor(new Date((t as any).timestamp).getTime() / 1000) as Time,
@@ -113,18 +128,70 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays }) =
 
     chartRef.current = chart;
 
+    // Handle window resize
+    const handleResize = () => {
+      if (chartContainerRef.current && chart) {
+        const rect = chartContainerRef.current.getBoundingClientRect();
+        chart.applyOptions({ 
+          width: Math.max(100, Math.floor(rect.width)),
+          height: Math.max(100, Math.floor(rect.height))
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (chartContainerRef.current) {
+      resizeObserver.observe(chartContainerRef.current);
+    }
+
+    // Live candle animation interval
+    let animationFrame: number;
+    if (enableLiveCandle && liveCandleState.current && seriesRef.current) {
+      const animate = () => {
+        if (liveCandleState.current && seriesRef.current) {
+          // Parse timeframe to get interval minutes
+          const intervalMinutes = timeframe === '1 Min' ? 1 :
+                                   timeframe === '5 Min' ? 5 :
+                                   timeframe === '15 Min' ? 15 :
+                                   timeframe === '30 Min' ? 30 :
+                                   timeframe === '1 Hr' ? 60 :
+                                   timeframe === '4 Hr' ? 240 :
+                                   timeframe === 'Daily' ? 1440 : 5;
+          
+          const liveCandle = updateLiveCandle(liveCandleState.current, intervalMinutes);
+          try {
+            seriesRef.current.update({
+              time: liveCandle.time as Time,
+              open: liveCandle.open,
+              high: liveCandle.high,
+              low: liveCandle.low,
+              close: liveCandle.close,
+            });
+          } catch (e) { /* ignore */ }
+        }
+        animationFrame = requestAnimationFrame(animate);
+      };
+      animationFrame = requestAnimationFrame(animate);
+    }
+
     return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       chart.remove();
       chartRef.current = null;
+      seriesRef.current = null;
     };
-  }, [data, overlays]);
+  }, [data, overlays, timeframe, enableLiveCandle]);
 
   return (
     <div
       ref={chartContainerRef}
       style={{
         width: '100%',
-        height: '400px',
+        height: '100%',
+        minHeight: '300px',
         border: '3px solid #a78bfa', // lavender border
         background: 'linear-gradient(to bottom, #d9f99d 40px, #ffffff 40px)', 
         // ✅ soft green strip at top for time axis area
