@@ -133,12 +133,12 @@ const TrendEdge: React.FC = () => {
   }, [ticker, timeframeFive, dataFive, selectedStrategyId]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "#121212", color: "#e0e0e0" }}>
-      <h1 style={{ textAlign: "center", flexShrink: 0 }}>THGP TrendEdge Strategy</h1>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "#121212", color: "#e0e0e0", overflow: "hidden" }}>
+      <h1 style={{ textAlign: "center", flexShrink: 0, margin: "0.5rem 0", fontSize: "1.5rem" }}>THGP TrendEdge Strategy</h1>
 
       {/* Company + Ticker Row */}
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", marginBottom: "2rem", flexShrink: 0 }}>
-        <h2 style={{ marginRight: "1rem" }}>{companyName}</h2>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem", flexShrink: 0 }}>
+        <h2 style={{ marginRight: "1rem", margin: 0, fontSize: "1.2rem" }}>{companyName}</h2>
         <input
           type="text"
           value={ticker}
@@ -155,7 +155,7 @@ const TrendEdge: React.FC = () => {
         </select>
       </div>
 
-      <div style={{ flex: 1, border: "1px solid #444", marginBottom: "1rem", minHeight: 0, marginLeft: "2rem", marginRight: "2rem" }}>
+      <div style={{ height: "55%", border: "1px solid #444", marginBottom: "0.5rem", marginLeft: "1rem", marginRight: "1rem", flexShrink: 0 }}>
         <ResizableGrid
           topLeft={
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
@@ -303,9 +303,9 @@ const TrendEdge: React.FC = () => {
       </div>
 
       {/* Feed + Review Boxes */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-        <div style={{ border: "1px solid #444", backgroundColor: "#1e1e1e" }}>
-          <h3 style={{ textAlign: "center", borderBottom: "1px solid #444", padding: "0.5rem", color: "#e0e0e0" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", height: "20%", marginLeft: "1rem", marginRight: "1rem", marginBottom: "0.5rem", flexShrink: 0 }}>
+        <div style={{ border: "1px solid #444", backgroundColor: "#1e1e1e", overflow: "auto" }}>
+          <h3 style={{ textAlign: "center", borderBottom: "1px solid #444", padding: "0.3rem", margin: 0, color: "#e0e0e0", fontSize: "1rem" }}>
             TrendEdge Feed
           </h3>
           {signals.slice(0, 8).map((s, i) => (
@@ -315,8 +315,8 @@ const TrendEdge: React.FC = () => {
           ))}
         </div>
 
-        <div style={{ border: "1px solid #444", backgroundColor: "#1e1e1e" }}>
-          <h3 style={{ textAlign: "center", borderBottom: "1px solid #444", padding: "0.5rem", color: "#e0e0e0" }}>
+        <div style={{ border: "1px solid #444", backgroundColor: "#1e1e1e", overflow: "auto" }}>
+          <h3 style={{ textAlign: "center", borderBottom: "1px solid #444", padding: "0.3rem", margin: 0, color: "#e0e0e0", fontSize: "1rem" }}>
             TrendEdge Review
           </h3>
           {signals.slice(0, 8).map((s, i) => (
