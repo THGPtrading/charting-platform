@@ -1,17 +1,6 @@
-// TradingView UDF-compatible datafeed proxy (Polygon-backed with mock fallback)
-// Run: npm run tv:server
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
-
-const app = express();
-app.use(cors());
-const PORT = process.env.PORT || 8081;
-
+// UDF /history backed by Polygon aggregates with mock fallback
 const POLYGON_KEY = process.env.POLYGON_API_KEY || process.env.REACT_APP_POLYGON_API_KEY;
 
-// Resolution mapping
 function mapResolution(resolution) {
   switch (resolution) {
     case '1': return { multiplier: 1, timespan: 'minute' };
@@ -26,12 +15,11 @@ function mapResolution(resolution) {
   }
 }
 
-// Mock fallback generator (used if Polygon unavailable or empty response)
-function mockHistory(from, to, start = 150) {
+function mockHistory(fromSec, toSec, start = 150) {
   const out = { s: 'ok', t: [], o: [], h: [], l: [], c: [], v: [] };
-  let ts = from;
+  let ts = fromSec;
   let price = start;
-  while (ts <= to) {
+  while (ts <= toSec) {
     const change = (Math.random() - 0.5) * 2;
     const open = price;
     const close = price + change;
@@ -42,49 +30,21 @@ function mockHistory(from, to, start = 150) {
     out.h.push(+high.toFixed(2));
     out.l.push(+low.toFixed(2));
     out.c.push(+close.toFixed(2));
-    out.v.push(Math.floor(Math.random() * 1000000));
+    out.v.push(Math.floor(Math.random() * 1_000_000));
     price = close;
-    ts += 60; // 1-min steps
+    ts += 60;
   }
   return out;
 }
 
-// /time endpoint
-app.get('/api/tv/time', (_req, res) => {
-  res.send(String(Math.floor(Date.now() / 1000)));
-});
-
-// /symbols endpoint
-app.get('/api/tv/symbols', (req, res) => {
-  const raw = req.query.symbol || 'AAPL';
-  const symbol = raw.includes(':') ? raw.split(':')[1] : raw;
-  res.json({
-    name: symbol,
-    ticker: symbol,
-    description: symbol,
-    type: 'stock',
-    session: '0930-1600',
-    exchange: 'NYSE',
-    listed_exchange: 'NYSE',
-    timezone: 'America/New_York',
-    minmov: 1,
-    pricescale: 100,
-    has_intraday: true,
-    supported_resolutions: ['1','3','5','15','30','60','240','D'],
-    volume_precision: 0,
-    data_status: 'streaming',
-  });
-});
-
-// /history endpoint (Polygon backed)
-app.get('/api/tv/history', async (req, res) => {
+module.exports = async (req, res) => {
   try {
-    const { symbol = 'AAPL', resolution = '5', from, to } = req.query;
+    const { symbol = 'AAPL', resolution = '5', from, to } = req.query || {};
     const fromSec = parseInt(from || String(Math.floor(Date.now()/1000 - 3600*24)), 10);
     const toSec = parseInt(to || String(Math.floor(Date.now()/1000)), 10);
     const { multiplier, timespan } = mapResolution(resolution);
-    // Prepare Polygon request if key exists
-    let result;
+
+    // Use Polygon when available
     if (POLYGON_KEY) {
       const cleanSymbol = symbol.includes(':') ? symbol.split(':')[1] : symbol;
       const fromDate = new Date(fromSec * 1000).toISOString().slice(0,10);
@@ -96,29 +56,22 @@ app.get('/api/tv/history', async (req, res) => {
       if (json && Array.isArray(json.results) && json.results.length) {
         const out = { s: 'ok', t: [], o: [], h: [], l: [], c: [], v: [] };
         for (const bar of json.results) {
-          out.t.push(Math.floor(bar.t / 1000)); // ms -> s
+          out.t.push(Math.floor(bar.t / 1000));
           out.o.push(bar.o);
           out.h.push(bar.h);
           out.l.push(bar.l);
           out.c.push(bar.c);
           out.v.push(bar.v);
         }
-        result = out;
-      } else {
-        result = { s: 'no_data' };
+        res.status(200).json(out);
+        return;
       }
-    } else {
-      result = mockHistory(fromSec, toSec);
+      // fall through to mock if Polygon returns no data
     }
-    // Fallback to mock if no_data
-    if (result.s === 'no_data') {
-      result = mockHistory(fromSec, toSec);
-    }
-    res.json(result);
-  } catch (err) {
-    console.error('History error', err);
-    res.json({ s: 'error', errmsg: (err && err.message) || 'unknown' });
-  }
-});
 
-app.listen(PORT, () => console.log(`TV datafeed server listening on ${PORT} (Polygon ${POLYGON_KEY ? 'enabled' : 'mock only'})`));
+    res.status(200).json(mockHistory(fromSec, toSec));
+  } catch (err) {
+    console.error('UDF /history error', err);
+    res.status(200).json({ s: 'error', errmsg: (err && err.message) || 'unknown' });
+  }
+};

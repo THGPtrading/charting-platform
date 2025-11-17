@@ -25,33 +25,57 @@ Reason for request (<= 140 chars):
 
 ## Enable TradingView Charts
 1. Place the Charting Library under `public/charting_library/` or serve it from a CDN path you control.
-2. Start the UDF server (mock for now):
+2. Create or update `.env`:
+
+```
+REACT_APP_USE_TV=1
+REACT_APP_TV_DATAFEED_URL=http://localhost:8081/api/tv
+REACT_APP_POLYGON_API_KEY=your_key_here
+POLYGON_API_KEY=your_key_here # optional server-side override
+```
+
+3. Start the UDF server (Polygon-backed; falls back to mock if key missing):
 
 ```bash
 npm run tv:server
 ```
 
-3. Enable TV mode:
-- Create `.env` with:
-
-```bash
-REACT_APP_USE_TV=1
-```
-
-4. Start the app:
+4. Start the app in another terminal:
 
 ```bash
 npm start
 ```
 
-The dashboards will now render TradingView charts within `ChartHost`. If the library is not found, a helpful overlay appears in the chart container with instructions.
+The dashboards now render TradingView charts within `ChartHost`. If neither the widget script nor the Charting Library is present, an overlay appears with load instructions.
 
-## Upgrading the Datafeed (UDF → Polygon)
-Replace the mock history with a real UDF proxy backed by Polygon in `tools/tv-datafeed-server.js`:
-- Map UDF `resolution` → Polygon `multiplier/timespan` (e.g., `1 → 1/minute`, `5 → 5/minute`, `60 → 1/hour`, `D → 1/day`).
-- Implement `/history` by fetching from Polygon aggregates endpoints and transform to UDF JSON `{ s, t, o, h, l, c, v }`.
-- Optionally implement `/search` and `/symbols` with richer metadata.
-- Ensure CORS is permitted for `http://localhost:3000` during development.
+### Production (Vercel Functions)
+- Serverless routes are deployed under `/api/tv/*`:
+  - `/api/tv/time`, `/api/tv/symbols`, `/api/tv/history`
+- Set env vars in Vercel Project Settings:
+  - `POLYGON_API_KEY` (server only), and optionally `REACT_APP_TV_DATAFEED_URL=https://app.thgptrading.com/api/tv`
+- `vercel.json` excludes `/api/*` from SPA rewrites so API routes work in production.
+
+## Datafeed Details (UDF → Polygon)
+`tools/tv-datafeed-server.js` now maps resolutions to Polygon ranges:
+
+| UDF | Polygon Range |
+|-----|---------------|
+| 1   | 1 minute      |
+| 3   | 3 minute      |
+| 5   | 5 minute      |
+| 15  | 15 minute     |
+| 30  | 30 minute     |
+| 60  | 1 hour        |
+| 240 | 4 hour        |
+| D   | 1 day         |
+
+If `POLYGON_API_KEY` (or `REACT_APP_POLYGON_API_KEY`) is set, `/history` returns live aggregates. Otherwise it returns deterministic mock data and still responds `s: ok` so the widget renders. Empty Polygon responses fall back to mock bars.
+
+Response format (UDF spec):
+```
+{ s: 'ok', t: [unix_sec], o: [], h: [], l: [], c: [], v: [] }
+```
+Errors return `{ s: 'error', errmsg }`. No data returns mock fallback.
 
 ## ChartEye Integration
 - Strategies are selectable in each dashboard header; signals are computed from the 5m pane and displayed in Feed/Review.

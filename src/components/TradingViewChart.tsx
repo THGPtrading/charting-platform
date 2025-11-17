@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { createUDFDatafeed } from '../integrations/tvDatafeedClient';
+import { createUDFDatafeed } from 'integrations/tvDatafeedClient';
 
 export type TVTimeframe = '1' | '5' | '15' | '60' | '240' | 'D';
 
@@ -59,11 +59,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({ symbol, timeframe, 
     const cl = (window as any).TradingView?.ChartingLibraryWidget || (window as any).ChartingLibraryWidget;
     if (cl && containerRef.current) {
       const interval = mapTimeframe(timeframe);
+      const base = process.env.REACT_APP_TV_DATAFEED_URL || 'http://localhost:8081/api/tv';
       widgetRef.current = new cl({
         symbol,
         interval,
         container: containerRef.current,
-        datafeed: createUDFDatafeed('http://localhost:8081/api/tv'),
+        datafeed: createUDFDatafeed(base),
         library_path: '/charting_library/', // requires hosted library files
         timezone: 'America/New_York',
         theme: 'Dark',

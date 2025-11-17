@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — THGP Trading</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div><strong>THGP Trading</strong></div>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/contact.html">Contact</a>
+        </nav>
+      </header>
+
+      <section class="card">
+        <h1>Privacy Policy</h1>
+        <p>We respect your privacy. This website collects minimal information necessary to deliver functionality. We do not sell personal data.</p>
+        <h3>Data we process</h3>
+        <ul>
+          <li>Basic diagnostics and aggregated usage metrics to improve reliability</li>
+          <li>Support communications you send to us</li>
+        </ul>
+        <h3>Cookies</h3>
+        <p>We use strictly necessary cookies and local storage for preferences and caching. We do not use third‑party advertising trackers.</p>
+        <h3>Contact</h3>
+        <p>Email <a href="mailto:contact@thgptrading.com">contact@thgptrading.com</a> for privacy requests.</p>
+        <p class="muted"><small>Last updated: <span id="d"></span></small></p>
+      </section>
+
+      <footer>
+        <div>© <span id="y"></span> THGP Trading</div>
+      </footer>
+    </div>
+    <script>const now=new Date();document.getElementById('y').textContent=now.getFullYear();document.getElementById('d').textContent=now.toISOString().slice(0,10);</script>
+  </body>
+  </html>
