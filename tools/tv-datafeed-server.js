@@ -11,6 +11,22 @@ const PORT = process.env.PORT || 8081;
 
 const POLYGON_KEY = process.env.POLYGON_API_KEY || process.env.REACT_APP_POLYGON_API_KEY;
 
+// Time sync utilities
+function getCurrentETTimestamp() {
+  const now = new Date();
+  const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etDate = new Date(etString);
+  return Math.floor(etDate.getTime() / 1000);
+}
+
+function calculateRealtimeOffset(timestamps) {
+  if (!timestamps || timestamps.length === 0) return 0;
+  const nowET = getCurrentETTimestamp();
+  const latestDataPoint = Math.max(...timestamps);
+  const targetTime = nowET - (24 * 60 * 60); // 24 hours ago
+  return targetTime - latestDataPoint;
+}
+
 // Resolution mapping
 function mapResolution(resolution) {
   switch (resolution) {
@@ -46,12 +62,17 @@ function mockHistory(from, to, start = 150) {
     price = close;
     ts += 60; // 1-min steps
   }
+  // Shift timestamps to appear real-time (24 hours offset)
+  if (out.t.length > 0) {
+    const offset = calculateRealtimeOffset(out.t);
+    out.t = out.t.map(t => t + offset);
+  }
   return out;
 }
 
 // /time endpoint
 app.get('/api/tv/time', (_req, res) => {
-  res.send(String(Math.floor(Date.now() / 1000)));
+  res.send(String(getCurrentETTimestamp()));
 });
 
 // /symbols endpoint
@@ -102,6 +123,11 @@ app.get('/api/tv/history', async (req, res) => {
           out.l.push(bar.l);
           out.c.push(bar.c);
           out.v.push(bar.v);
+        }
+        // Shift timestamps to appear real-time (24 hours offset)
+        if (out.t.length > 0) {
+          const offset = calculateRealtimeOffset(out.t);
+          out.t = out.t.map(t => t + offset);
         }
         result = out;
       } else {

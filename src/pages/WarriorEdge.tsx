@@ -5,14 +5,15 @@ import ResizableGrid from "../components/ResizableGrid";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { lookupCompanyName } from "../utils/companyLookup";
 import { fetchPolygonCandles, mapTimeframe, ChartCandle, wasLastFetchCached } from "../api/polygonClient";
+import { getCurrentETTimestamp } from "../utils/timeSync";
 
 // Mock data generator for demo purposes when API is unavailable
 function generateMockCandles(count: number, startPrice: number = 150): ChartCandle[] {
-  const now = Math.floor(Date.now() / 1000);
+  const now = getCurrentETTimestamp() - (24 * 60 * 60); // ET time, 24 hours ago
   const out: ChartCandle[] = [];
   let price = startPrice;
   for (let i = count; i > 0; i--) {
-    const time = now - i * 60;
+    const time = now - i * 60; // 1 min intervals
     const change = (Math.random() - 0.5) * 2;
     const open = price;
     const close = price + change;

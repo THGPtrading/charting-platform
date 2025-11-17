@@ -2,6 +2,7 @@
 
 const API_KEY: string | undefined = process.env.REACT_APP_POLYGON_API_KEY;
 import { isMarketOpenNow } from "../utils/marketHours";
+import { shiftCandlesToRealtime } from "../utils/timeSync";
 const BASE_URL = "https://api.polygon.io";
 
 export interface PolygonCandle {
@@ -122,9 +123,13 @@ export const fetchPolygonCandles = async (
       close: candle.c,
       volume: candle.v,
     }));
-    if (out.length) { saveCache(key, out); lastFetchCachedByKey.set(key, false); }
+    
+    // Shift timestamps to appear real-time (synchronized to ET, 24 hours offset)
+    const shifted = shiftCandlesToRealtime(out);
+    
+    if (shifted.length) { saveCache(key, shifted); lastFetchCachedByKey.set(key, false); }
     else lastFetchCachedByKey.set(key, false);
-    return out;
+    return shifted;
   } catch (err) {
     console.error("Polygon fetch failed:", err);
     const cached = loadCache(key, maxAgeMs);
