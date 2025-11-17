@@ -3,7 +3,7 @@ import TrendChart, { TrendChartProps } from './TrendChart';
 import TradingViewChart from './TradingViewChart';
 
 interface ChartHostProps extends TrendChartProps {
-  symbol?: string; // required if TV mode is enabled
+  symbol?: string; // for TradingView mode compatibility
 }
 
 const useTV = () => (process.env.REACT_APP_USE_TV === '1' || process.env.REACT_APP_USE_TV === 'true');

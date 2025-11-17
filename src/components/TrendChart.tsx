@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart, IChartApi, Time, CandlestickSeries, LineSeries, HistogramSeries, createSeriesMarkers } from 'lightweight-charts';
 import type { ChartCandle } from '../api/polygonClient';
-import { initializeLiveCandle, updateLiveCandle, LiveCandleState } from '../utils/liveCandle';
+import { liveCandleSync } from '../utils/liveCandleSync';
 
 // Simple global sync bus
 declare global { interface Window { __chartSync?: any } }
@@ -74,6 +74,7 @@ function atr(candles: ChartCandle[], period: number): (number | null)[] {
 }
 
 export interface TrendChartProps {
+  ticker: string; // Stock ticker symbol for synchronized live candles
   candles: ChartCandle[];
   timeframe: '1 Min'|'5 Min'|'10 Min'|'15 Min'|'30 Min'|'1 Hr'|'4 Hr'|'Daily';
   syncGroup: string;
@@ -100,7 +101,7 @@ function secondsPerBar(tf: TrendChartProps['timeframe']): number {
   }
 }
 
-const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, showVWAP, show50MA, show200MA, showVolume, rsiPeriods, macdConfig, showATR, realtime }) => {
+const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syncGroup, showVWAP, show50MA, show200MA, showVolume, rsiPeriods, macdConfig, showATR, realtime }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<any | null>(null);
@@ -110,7 +111,6 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
   const lastTimeRef = useRef<number | null>(null);
   const lastCloseRef = useRef<number | null>(null);
   const perBarRef = useRef<number>(secondsPerBar(timeframe));
-  const liveCandleState = useRef<LiveCandleState | null>(null);
 
   const [drawMode, setDrawMode] = React.useState<boolean>(false);
   const [trendlines, setTrendlines] = React.useState<Array<{ x1: number; y1: number; x2: number; y2: number }>>([]);
@@ -204,9 +204,9 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       lastTimeRef.current = candles[candles.length-1].time; 
       lastCloseRef.current = candles[candles.length-1].close; 
       
-      // Initialize live candle state for real-time animation
+      // Initialize/update synchronized live candle state
       const lastCandle = candles[candles.length - 1];
-      liveCandleState.current = initializeLiveCandle(lastCandle);
+      liveCandleSync.updateBaseCandle(ticker, lastCandle);
     }
 
     // Overlays
@@ -309,45 +309,50 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
     const resizeObserver = new ResizeObserver(handleResize);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
+      // Trigger initial resize to ensure chart fills flex container
+      requestAnimationFrame(() => handleResize());
     }
 
-    // Live candle animation
-    let animationInterval: number;
-    if (liveCandleState.current && mainSeriesRef.current) {
-      const animate = () => {
-        if (liveCandleState.current && mainSeriesRef.current) {
-          const intervalMinutes = timeframe === '1 Min' ? 1 :
-                                   timeframe === '5 Min' ? 5 :
-                                   timeframe === '10 Min' ? 10 :
-                                   timeframe === '15 Min' ? 15 :
-                                   timeframe === '30 Min' ? 30 :
-                                   timeframe === '1 Hr' ? 60 :
-                                   timeframe === '4 Hr' ? 240 :
-                                   timeframe === 'Daily' ? 1440 : 5;
-          
-          const liveCandle = updateLiveCandle(liveCandleState.current, intervalMinutes);
-          try {
-            mainSeriesRef.current.update({
-              time: liveCandle.time as unknown as Time,
-              open: liveCandle.open,
-              high: liveCandle.high,
-              low: liveCandle.low,
-              close: liveCandle.close,
-            });
-          } catch (e) { /* ignore */ }
+    // Live candle animation - synchronized across all charts for same ticker
+    let unsubscribe: (() => void) | null = null;
+    if (mainSeriesRef.current && candles.length > 0) {
+      const intervalMinutes = timeframe === '1 Min' ? 1 :
+                               timeframe === '5 Min' ? 5 :
+                               timeframe === '10 Min' ? 10 :
+                               timeframe === '15 Min' ? 15 :
+                               timeframe === '30 Min' ? 30 :
+                               timeframe === '1 Hr' ? 60 :
+                               timeframe === '4 Hr' ? 240 :
+                               timeframe === 'Daily' ? 1440 : 5;
+      
+      const updateChart = () => {
+        if (mainSeriesRef.current) {
+          const liveCandle = liveCandleSync.getCurrentCandle(ticker, intervalMinutes);
+          if (liveCandle) {
+            try {
+              mainSeriesRef.current.update({
+                time: liveCandle.time as unknown as Time,
+                open: liveCandle.open,
+                high: liveCandle.high,
+                low: liveCandle.low,
+                close: liveCandle.close,
+              });
+            } catch (e) { /* ignore */ }
+          }
         }
       };
-      // Update every 500ms instead of every frame
-      animationInterval = window.setInterval(animate, 500);
+      
+      // Subscribe to synchronized updates
+      unsubscribe = liveCandleSync.subscribe(ticker, updateChart);
     }
 
     return () => { 
-      if (animationInterval) clearInterval(animationInterval);
+      if (unsubscribe) unsubscribe();
       window.removeEventListener('resize', handleResize);
       resizeObserver.disconnect();
       try { unsub(); chart.remove(); } catch {} 
     };
-  }, [candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
+  }, [ticker, candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
@@ -390,7 +395,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       </div>
 
       {/* Chart container */}
-      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px', overflow: 'hidden' }}>
+      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px', width: '100%', overflow: 'hidden' }}>
         <div ref={guideRef} style={{ position: 'absolute', top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.2)', pointerEvents: 'none', display: 'none' }} />
         
         {/* Drawing overlay canvas */}

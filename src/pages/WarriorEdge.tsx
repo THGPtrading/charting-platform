@@ -6,6 +6,7 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { lookupCompanyName } from "../utils/companyLookup";
 import { fetchPolygonCandles, mapTimeframe, ChartCandle, wasLastFetchCached } from "../api/polygonClient";
 import { getCurrentETTimestamp } from "../utils/timeSync";
+import { aggregateCandles } from "../utils/candleAggregation";
 
 // Mock data generator for demo purposes when API is unavailable
 function generateMockCandles(count: number, startPrice: number = 150): ChartCandle[] {
@@ -34,14 +35,15 @@ const WarriorEdge: React.FC = () => {
   const [timeframeFive, setTimeframeFive] = useState<"5 Min">("5 Min");
   const [timeframeFifteen, setTimeframeFifteen] = useState<"15 Min">("15 Min");
 
-  const [dataDaily, setDataDaily] = useState<ChartCandle[]>([]);
-  const [dataHour, setDataHour] = useState<ChartCandle[]>([]);
-  const [dataFive, setDataFive] = useState<ChartCandle[]>([]);
-  const [dataFifteen, setDataFifteen] = useState<ChartCandle[]>([]);
-  const [cachedDaily, setCachedDaily] = useState(false);
-  const [cachedHour, setCachedHour] = useState(false);
-  const [cachedFive, setCachedFive] = useState(false);
-  const [cachedFifteen, setCachedFifteen] = useState(false);
+  // Fetch base 1-minute data once, then aggregate for all timeframes
+  const [baseMinuteData, setBaseMinuteData] = useState<ChartCandle[]>([]);
+  const [cached, setCached] = useState(false);
+  
+  // Aggregated views derived from base data
+  const dataDaily = React.useMemo(() => aggregateCandles(baseMinuteData, timeframeDaily), [baseMinuteData, timeframeDaily]);
+  const dataHour = React.useMemo(() => aggregateCandles(baseMinuteData, timeframeHour), [baseMinuteData, timeframeHour]);
+  const dataFive = React.useMemo(() => aggregateCandles(baseMinuteData, timeframeFive), [baseMinuteData, timeframeFive]);
+  const dataFifteen = React.useMemo(() => aggregateCandles(baseMinuteData, timeframeFifteen), [baseMinuteData, timeframeFifteen]);
 
   const [feedData, setFeedData] = useState<ChartCandle[]>([]);
   const [reviewData, setReviewData] = useState<ChartCandle[]>([]);
@@ -56,33 +58,16 @@ const WarriorEdge: React.FC = () => {
     setCompanyName(lookupCompanyName(upper));
   };
 
+  // Fetch base 1-minute data - all charts will derive from this
   useEffect(() => {
-    const { multiplier, timespan } = mapTimeframe(timeframeDaily);
+    const { multiplier, timespan } = mapTimeframe('1 Min');
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => { setDataDaily(candles && candles.length > 0 ? candles : generateMockCandles(500, 150)); setCachedDaily(wasLastFetchCached(ticker, multiplier, timespan)); })
-      .catch(() => { setDataDaily(generateMockCandles(500, 150)); setCachedDaily(false); });
-  }, [ticker, timeframeDaily]);
-
-  useEffect(() => {
-    const { multiplier, timespan } = mapTimeframe(timeframeHour);
-    fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => { setDataHour(candles && candles.length > 0 ? candles : generateMockCandles(400, 150)); setCachedHour(wasLastFetchCached(ticker, multiplier, timespan)); })
-      .catch(() => { setDataHour(generateMockCandles(400, 150)); setCachedHour(false); });
-  }, [ticker, timeframeHour]);
-
-  useEffect(() => {
-    const { multiplier, timespan } = mapTimeframe(timeframeFive);
-    fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => { setDataFive(candles && candles.length > 0 ? candles : generateMockCandles(300, 150)); setCachedFive(wasLastFetchCached(ticker, multiplier, timespan)); })
-      .catch(() => { setDataFive(generateMockCandles(300, 150)); setCachedFive(false); });
-  }, [ticker, timeframeFive]);
-
-  useEffect(() => {
-    const { multiplier, timespan } = mapTimeframe(timeframeFifteen);
-    fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
-      .then(candles => { setDataFifteen(candles && candles.length > 0 ? candles : generateMockCandles(350, 150)); setCachedFifteen(wasLastFetchCached(ticker, multiplier, timespan)); })
-      .catch(() => { setDataFifteen(generateMockCandles(350, 150)); setCachedFifteen(false); });
-  }, [ticker, timeframeFifteen]);
+      .then(candles => {
+        setBaseMinuteData(candles && candles.length > 0 ? candles : generateMockCandles(2000, 150));
+        setCached(wasLastFetchCached(ticker, multiplier, timespan));
+      })
+      .catch(() => { setBaseMinuteData(generateMockCandles(2000, 150)); setCached(false); });
+  }, [ticker]);
 
   useEffect(() => {
     const { multiplier, timespan } = mapTimeframe("1 Min");
@@ -173,7 +158,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeDaily} Chart {cachedDaily && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeDaily} Chart {cached && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#ffd700' }}>50MA</span>
                     <span style={{ color: '#1e90ff' }}>200MA</span>
@@ -186,7 +171,7 @@ const WarriorEdge: React.FC = () => {
               </div>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
-                  <ChartHost symbol={ticker} candles={dataDaily} timeframe={timeframeDaily} syncGroup="warrioredge" showVWAP={false} show50MA={true} show200MA={true} showVolume={true} rsiPeriods={[]} macdConfig={null} showATR={true} />
+                  <ChartHost ticker={ticker} symbol={ticker} candles={dataDaily} timeframe={timeframeDaily} syncGroup="warrioredge" showVWAP={false} show50MA={true} show200MA={true} showVolume={true} rsiPeriods={[]} macdConfig={null} showATR={true} />
                 </ErrorBoundary>
               </div>
             </div>
@@ -195,7 +180,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeHour} Chart {cachedHour && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeHour} Chart {cached && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#ffd700' }}>50MA</span>
@@ -209,7 +194,7 @@ const WarriorEdge: React.FC = () => {
               </div>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
-                  <ChartHost symbol={ticker} candles={dataHour} timeframe={timeframeHour} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
+                  <ChartHost ticker={ticker} symbol={ticker} candles={dataHour} timeframe={timeframeHour} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
                 </ErrorBoundary>
               </div>
             </div>
@@ -218,7 +203,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeFive} Chart {cachedFive && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeFive} Chart {cached && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#9acd32' }}>RSI</span>
@@ -231,7 +216,7 @@ const WarriorEdge: React.FC = () => {
               </div>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
-                  <ChartHost symbol={ticker} candles={dataFive} timeframe={timeframeFive} syncGroup="warrioredge" showVWAP={true} show50MA={false} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 6, slow: 13, signal: 5 }} showATR={false} />
+                  <ChartHost ticker={ticker} symbol={ticker} candles={dataFive} timeframe={timeframeFive} syncGroup="warrioredge" showVWAP={true} show50MA={false} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 6, slow: 13, signal: 5 }} showATR={false} />
                 </ErrorBoundary>
               </div>
             </div>
@@ -240,7 +225,7 @@ const WarriorEdge: React.FC = () => {
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.5rem', borderBottom: '1px solid #333' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{timeframeFifteen} Chart {cachedFifteen && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
+                  <h3 style={{ margin: 0 }}>{timeframeFifteen} Chart {cached && <span style={{fontSize:10, color:'#ccc'}}>(cached)</span>}</h3>
                   <div style={{ display: 'flex', gap: 6, fontSize: 12 }}>
                     <span style={{ color: '#6a0dad' }}>VWAP</span>
                     <span style={{ color: '#ffd700' }}>50MA</span>
@@ -254,7 +239,7 @@ const WarriorEdge: React.FC = () => {
               </div>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
-                  <ChartHost symbol={ticker} candles={dataFifteen} timeframe={timeframeFifteen} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
+                  <ChartHost ticker={ticker} symbol={ticker} candles={dataFifteen} timeframe={timeframeFifteen} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
                 </ErrorBoundary>
               </div>
             </div>
