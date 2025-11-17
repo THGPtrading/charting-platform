@@ -350,9 +350,9 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
   }, [candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: '#1a1a1a', borderBottom: '1px solid #333' }}>
+      <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: '#1a1a1a', borderBottom: '1px solid #333', flexShrink: 0 }}>
         <button
           onClick={() => setDrawMode(!drawMode)}
           style={{
@@ -390,7 +390,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       </div>
 
       {/* Chart container */}
-      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px' }}>
+      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px', overflow: 'hidden' }}>
         <div ref={guideRef} style={{ position: 'absolute', top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.2)', pointerEvents: 'none', display: 'none' }} />
         
         {/* Drawing overlay canvas */}

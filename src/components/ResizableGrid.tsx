@@ -47,13 +47,13 @@ const ResizableGrid: React.FC<PropsWithChildren<ResizableGridProps>> = ({
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: `minmax(${minColPx}px, ${colPct}%) 6px minmax(${minColPx}px, ${100 - colPct}%)`,
-    gridTemplateRows: `minmax(${minRowPx}px, ${rowPct}%) 6px minmax(${minRowPx}px, ${100 - rowPct}%)`,
+    gridTemplateColumns: `${colPct}% 6px ${100 - colPct}%`,
+    gridTemplateRows: `${rowPct}% 6px ${100 - rowPct}%`,
     height: '100%',
     width: '100%',
     gap: 0,
     position: 'relative',
-    minWidth: `${minColPx * 2 + 6}px`,
+    overflow: 'hidden',
   };
 
   const handleStyle: React.CSSProperties = {

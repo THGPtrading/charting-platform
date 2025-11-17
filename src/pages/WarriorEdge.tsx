@@ -184,7 +184,7 @@ const WarriorEdge: React.FC = () => {
                   {timeframeOptions.map((tf) => (<option key={tf} value={tf}>{tf}</option>))}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
                   <ChartHost symbol={ticker} candles={dataDaily} timeframe={timeframeDaily} syncGroup="warrioredge" showVWAP={false} show50MA={true} show200MA={true} showVolume={true} rsiPeriods={[]} macdConfig={null} showATR={true} />
                 </ErrorBoundary>
@@ -207,7 +207,7 @@ const WarriorEdge: React.FC = () => {
                   {timeframeOptions.map((tf) => (<option key={tf} value={tf}>{tf}</option>))}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
                   <ChartHost symbol={ticker} candles={dataHour} timeframe={timeframeHour} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
                 </ErrorBoundary>
@@ -229,7 +229,7 @@ const WarriorEdge: React.FC = () => {
                   {timeframeOptions.map((tf) => (<option key={tf} value={tf}>{tf}</option>))}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
                   <ChartHost symbol={ticker} candles={dataFive} timeframe={timeframeFive} syncGroup="warrioredge" showVWAP={true} show50MA={false} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 6, slow: 13, signal: 5 }} showATR={false} />
                 </ErrorBoundary>
@@ -252,7 +252,7 @@ const WarriorEdge: React.FC = () => {
                   {timeframeOptions.map((tf) => (<option key={tf} value={tf}>{tf}</option>))}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <ErrorBoundary>
                   <ChartHost symbol={ticker} candles={dataFifteen} timeframe={timeframeFifteen} syncGroup="warrioredge" showVWAP={true} show50MA={true} show200MA={false} showVolume={true} rsiPeriods={[7,14,21]} macdConfig={{ fast: 12, slow: 26, signal: 9 }} showATR={false} />
                 </ErrorBoundary>
