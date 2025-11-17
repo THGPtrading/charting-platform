@@ -305,7 +305,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syn
             const currentOptions = chart.options();
             if (currentOptions.width !== newWidth || currentOptions.height !== newHeight) {
               chart.applyOptions({ width: newWidth, height: newHeight });
-              chart.timeScale().fitContent();
+              // Don't call fitContent - it resets the visible range to show all candles
             }
           }
         });
