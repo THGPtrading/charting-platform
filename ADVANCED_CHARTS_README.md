@@ -24,6 +24,22 @@ Charts are synchronized to **Eastern Time (ET)** with a **24-hour offset** to si
   - UDF endpoints (`/api/tv/history`, local server) - shifts TradingView datafeed
 - The `/time` endpoint returns current ET timestamp for proper chart synchronization
 
+## Live Candle Animation
+Charts feature **real-time candle animation** to simulate live market streaming:
+- The most recent candle continuously updates with smooth price movement
+- Price oscillates within a realistic volatility range (~0.2% of base price)
+- High/low values expand dynamically as price moves
+- Volume accumulates progressively through the candle interval
+- Animation uses `requestAnimationFrame` for smooth 60fps updates
+- Implemented in `src/utils/liveCandle.ts` and integrated into `TrendChart` and `LightweightChart`
+
+## Responsive Design
+Charts are fully responsive and adapt to browser window size:
+- `ResizableGrid` uses CSS Grid with `minmax()` for flexible column/row sizing
+- Charts use `ResizeObserver` to detect container size changes
+- Charts automatically reflow when browser is narrowed
+- All charts stay visible and properly scaled regardless of viewport size
+
 ## What You’ll Provide
 1. TradingView Advanced Charts (Charting Library) license and library bundle (`/charting_library` directory).
 2. Decision on datafeed source:
