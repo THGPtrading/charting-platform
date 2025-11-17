@@ -120,9 +120,10 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
     if (!containerRef.current) return;
     if (chartRef.current) { try { chartRef.current.remove(); } catch {} chartRef.current = null; }
 
+    const containerRect = containerRef.current.getBoundingClientRect();
     const chart = createChart(containerRef.current, {
-      width: containerRef.current.clientWidth || 600,
-      height: 380,
+      width: containerRect.width || 600,
+      height: containerRect.height || 380,
       layout: { background: { color: '#111' }, textColor: '#e0e0e0' },
       grid: { vertLines: { color: '#333' }, horzLines: { color: '#333' } },
       timeScale: { borderColor: '#888', timeVisible: true, secondsVisible: true, lockVisibleTimeRangeOnResize: true },
@@ -262,6 +263,23 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       } } catch {}
     });
 
+    // Handle window resize to maintain chart dimensions and axis visibility
+    const handleResize = () => {
+      if (containerRef.current && chart) {
+        const rect = containerRef.current.getBoundingClientRect();
+        chart.applyOptions({ 
+          width: Math.max(100, Math.floor(rect.width)),
+          height: Math.max(100, Math.floor(rect.height))
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
     // Live candle animation
     let animationFrame: number;
     if (liveCandleState.current && mainSeriesRef.current) {
@@ -294,6 +312,8 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
 
     return () => { 
       if (animationFrame) cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       try { unsub(); chart.remove(); } catch {} 
     };
   }, [candles, timeframe, showVWAP, show50MA, show200MA, showVolume, JSON.stringify(rsiPeriods), macdConfig ? `${macdConfig.fast}-${macdConfig.slow}-${macdConfig.signal}` : 'none', showATR, syncGroup]);
@@ -339,7 +359,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       </div>
 
       {/* Chart container */}
-      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative' }}>
+      <div ref={containerRef} style={{ flex: 1, border: '1px solid #444', position: 'relative', minHeight: '300px' }}>
         <div ref={guideRef} style={{ position: 'absolute', top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.2)', pointerEvents: 'none', display: 'none' }} />
         
         {/* Drawing overlay canvas */}

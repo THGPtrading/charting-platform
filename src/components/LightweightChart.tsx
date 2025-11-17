@@ -35,7 +35,7 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays, tim
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth || 600,
-      height: 400,
+      height: chartContainerRef.current.clientHeight || 400,
       layout: { background: { color: '#ffffff' }, textColor: '#000' },
       grid: { vertLines: { color: '#eee' }, horzLines: { color: '#eee' } },
       timeScale: {
