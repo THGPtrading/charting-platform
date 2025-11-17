@@ -274,7 +274,7 @@ const TrendEdge: React.FC = () => {
                   </div>
                 </div>
                 <select value={timeframeFifteen} onChange={(e) => setTimeframeFifteen(e.target.value as typeof timeframeFifteen)} style={{ backgroundColor: '#1e1e1e', color: '#e0e0e0', border: '1px solid #444' }}>
-                  {timeframeOptions.map((tf) => (<option key={tf} value={tf}){tf}</option>))}
+                  {timeframeOptions.map((tf) => (<option key={tf} value={tf}>{tf}</option>))}
                 </select>
               </div>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
