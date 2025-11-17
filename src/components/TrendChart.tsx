@@ -266,10 +266,16 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
     // Handle window resize to maintain chart dimensions and axis visibility
     const handleResize = () => {
       if (containerRef.current && chart) {
-        const rect = containerRef.current.getBoundingClientRect();
-        chart.applyOptions({ 
-          width: Math.max(100, Math.floor(rect.width)),
-          height: Math.max(100, Math.floor(rect.height))
+        requestAnimationFrame(() => {
+          if (containerRef.current && chart) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const newWidth = Math.max(100, Math.floor(rect.width));
+            const newHeight = Math.max(100, Math.floor(rect.height));
+            chart.applyOptions({ width: newWidth, height: newHeight });
+            try {
+              chart.timeScale().fitContent();
+            } catch (e) { /* ignore */ }
+          }
         });
       }
     };

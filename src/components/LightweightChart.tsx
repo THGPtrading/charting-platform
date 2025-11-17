@@ -131,10 +131,16 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays, tim
     // Handle window resize
     const handleResize = () => {
       if (chartContainerRef.current && chart) {
-        const rect = chartContainerRef.current.getBoundingClientRect();
-        chart.applyOptions({ 
-          width: Math.max(100, Math.floor(rect.width)),
-          height: Math.max(100, Math.floor(rect.height))
+        requestAnimationFrame(() => {
+          if (chartContainerRef.current && chart) {
+            const rect = chartContainerRef.current.getBoundingClientRect();
+            const newWidth = Math.max(100, Math.floor(rect.width));
+            const newHeight = Math.max(100, Math.floor(rect.height));
+            chart.applyOptions({ width: newWidth, height: newHeight });
+            try {
+              chart.timeScale().fitContent();
+            } catch (e) { /* ignore */ }
+          }
         });
       }
     };
