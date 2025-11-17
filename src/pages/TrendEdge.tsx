@@ -64,10 +64,11 @@ const TrendEdge: React.FC = () => {
     const { multiplier, timespan } = mapTimeframe('1 Min');
     fetchPolygonCandles(ticker, multiplier, timespan, "2023-01-01", "2023-12-31")
       .then(candles => {
-        setBaseMinuteData(candles && candles.length > 0 ? candles : generateMockCandles(2000, 150));
+        // Generate ~35 days worth of 1-minute data (50400 minutes) for proper Daily chart
+        setBaseMinuteData(candles && candles.length > 0 ? candles : generateMockCandles(50400, 150));
         setCached(wasLastFetchCached(ticker, multiplier, timespan));
       })
-      .catch(() => { setBaseMinuteData(generateMockCandles(2000, 150)); setCached(false); });
+      .catch(() => { setBaseMinuteData(generateMockCandles(50400, 150)); setCached(false); });
   }, [ticker]);
 
   useEffect(() => {
