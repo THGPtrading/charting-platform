@@ -146,10 +146,10 @@ const MomentumEdge: React.FC = () => {
   }, [ticker, timeframeFive, dataFive, selectedStrategyId]);
 
   return (
-    <div style={{ padding: "2rem", backgroundColor: "#121212", color: "#e0e0e0", minHeight: "100vh" }}>
-      <h1 style={{ textAlign: "center" }}>⚡ THGP MomentumEdge Strategy</h1>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "#121212", color: "#e0e0e0" }}>
+      <h1 style={{ textAlign: "center", flexShrink: 0 }}>⚡ THGP MomentumEdge Strategy</h1>
 
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem", marginBottom: "2rem", flexShrink: 0 }}>
         <h2 style={{ marginRight: "1rem" }}>{companyName}</h2>
         <input
           type="text"
@@ -167,7 +167,7 @@ const MomentumEdge: React.FC = () => {
         </select>
       </div>
 
-      <div style={{ height: "70vh", border: "1px solid #444", marginBottom: "1rem" }}>
+      <div style={{ flex: 1, border: "1px solid #444", marginBottom: "1rem", minHeight: 0, marginLeft: "2rem", marginRight: "2rem" }}>
         <ResizableGrid
           topLeft={
             <div style={{ border: "2px solid #a78bfa", backgroundColor: "#1e1e1e", height: "100%", display: 'flex', flexDirection: 'column' }}>

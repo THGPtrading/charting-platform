@@ -1,7 +1,7 @@
 // src/api/polygonClient.ts
 
 import { isMarketOpenNow } from "../utils/marketHours";
-import { shiftCandlesToRealtime } from "../utils/timeSync";
+import { shiftCandlesToRealtime, getCurrentETTimestamp } from "../utils/timeSync";
 
 const API_KEY: string | undefined = process.env.REACT_APP_POLYGON_API_KEY;
 const BASE_URL = "https://api.polygon.io";
@@ -127,6 +127,15 @@ export const fetchPolygonCandles = async (
     
     // Shift timestamps to appear real-time (synchronized to ET, 24 hours offset)
     const shifted = shiftCandlesToRealtime(out);
+    
+    // Log time sync for verification
+    if (out.length > 0 && shifted.length > 0) {
+      const originalLast = new Date(out[out.length - 1].time * 1000);
+      const shiftedLast = new Date(shifted[shifted.length - 1].time * 1000);
+      console.log(`[Time Sync] Original last candle: ${originalLast.toISOString()}`);
+      console.log(`[Time Sync] Shifted last candle: ${shiftedLast.toISOString()}`);
+      console.log(`[Time Sync] Current ET: ${new Date(getCurrentETTimestamp() * 1000).toISOString()}`);
+    }
     
     if (shifted.length) { saveCache(key, shifted); lastFetchCachedByKey.set(key, false); }
     else lastFetchCachedByKey.set(key, false);
