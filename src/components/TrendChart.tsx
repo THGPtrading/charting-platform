@@ -126,8 +126,34 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
       height: containerRect.height || 380,
       layout: { background: { color: '#111' }, textColor: '#e0e0e0' },
       grid: { vertLines: { color: '#333' }, horzLines: { color: '#333' } },
-      timeScale: { borderColor: '#888', timeVisible: true, secondsVisible: true, lockVisibleTimeRangeOnResize: true },
-      rightPriceScale: { borderColor: '#888', autoScale: false },
+      timeScale: { 
+        borderColor: '#888', 
+        timeVisible: true, 
+        secondsVisible: true, 
+        lockVisibleTimeRangeOnResize: true,
+        visible: true,
+        fixLeftEdge: false,
+        fixRightEdge: false
+      },
+      rightPriceScale: { 
+        borderColor: '#888', 
+        autoScale: true,
+        visible: true,
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
+      },
+      crosshair: {
+        vertLine: {
+          visible: true,
+          labelVisible: true,
+        },
+        horzLine: {
+          visible: true,
+          labelVisible: true,
+        },
+      },
     });
     chartRef.current = chart;
 
@@ -272,9 +298,8 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
             const newWidth = Math.max(100, Math.floor(rect.width));
             const newHeight = Math.max(100, Math.floor(rect.height));
             chart.applyOptions({ width: newWidth, height: newHeight });
-            try {
-              chart.timeScale().fitContent();
-            } catch (e) { /* ignore */ }
+            // Don't call fitContent - it can cause the axes to disappear
+            // The chart should maintain its current visible range
           }
         });
       }

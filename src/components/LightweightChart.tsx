@@ -42,9 +42,28 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays, tim
         borderColor: '#000',
         timeVisible: true,
         secondsVisible: true,
+        visible: true,
+        fixLeftEdge: false,
+        fixRightEdge: false,
       },
       rightPriceScale: {
         borderColor: '#000',
+        autoScale: true,
+        visible: true,
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
+      },
+      crosshair: {
+        vertLine: {
+          visible: true,
+          labelVisible: true,
+        },
+        horzLine: {
+          visible: true,
+          labelVisible: true,
+        },
       },
     });
 
@@ -137,9 +156,7 @@ const LightweightChart: React.FC<LightweightChartProps> = ({ data, overlays, tim
             const newWidth = Math.max(100, Math.floor(rect.width));
             const newHeight = Math.max(100, Math.floor(rect.height));
             chart.applyOptions({ width: newWidth, height: newHeight });
-            try {
-              chart.timeScale().fitContent();
-            } catch (e) { /* ignore */ }
+            // Don't call fitContent - maintain current visible range
           }
         });
       }
