@@ -132,9 +132,10 @@ export const fetchPolygonCandles = async (
     if (out.length > 0 && shifted.length > 0) {
       const originalLast = new Date(out[out.length - 1].time * 1000);
       const shiftedLast = new Date(shifted[shifted.length - 1].time * 1000);
-      console.log(`[Time Sync] Original last candle: ${originalLast.toISOString()}`);
-      console.log(`[Time Sync] Shifted last candle: ${shiftedLast.toISOString()}`);
-      console.log(`[Time Sync] Current ET: ${new Date(getCurrentETTimestamp() * 1000).toISOString()}`);
+      const currentET = new Date(getCurrentETTimestamp() * 1000);
+      console.log(`[Time Sync ${ticker}] Original: ${originalLast.toLocaleString('en-US', { timeZone: 'America/New_York' })}`);
+      console.log(`[Time Sync ${ticker}] Shifted:  ${shiftedLast.toLocaleString('en-US', { timeZone: 'America/New_York' })} (should be ~24hrs ago)`);
+      console.log(`[Time Sync ${ticker}] Current:  ${currentET.toLocaleString('en-US', { timeZone: 'America/New_York' })}`);
     }
     
     if (shifted.length) { saveCache(key, shifted); lastFetchCachedByKey.set(key, false); }

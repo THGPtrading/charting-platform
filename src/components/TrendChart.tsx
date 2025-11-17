@@ -158,9 +158,10 @@ const TrendChart: React.FC<TrendChartProps> = ({ ticker, candles, timeframe, syn
     chartRef.current = chart;
 
     // Set visible range BEFORE adding any series to prevent auto-fit
+    // Show last 35 candles by default
     if (candles.length) {
       const last = candles[candles.length - 1].time;
-      const startIdx = Math.max(0, candles.length - 30);
+      const startIdx = Math.max(0, candles.length - 35);
       chart.timeScale().setVisibleLogicalRange({ from: startIdx, to: candles.length - 1 });
     }
 

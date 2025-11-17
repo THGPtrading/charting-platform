@@ -11,6 +11,7 @@ import { aggregateCandles } from "../utils/candleAggregation";
 // Mock data generator for demo purposes when API is unavailable
 function generateMockCandles(count: number, startPrice: number = 150): ChartCandle[] {
   const now = getCurrentETTimestamp() - (24 * 60 * 60); // ET time, 24 hours ago
+  console.log('[Mock Data] Generating', count, 'candles ending at:', new Date(now * 1000).toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const out: ChartCandle[] = [];
   let price = startPrice;
   for (let i = count; i > 0; i--) {

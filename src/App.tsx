@@ -11,11 +11,14 @@ import { isMarketOpenNow } from "./utils/marketHours";
 
 // Clear old cached data on app load to ensure time sync is applied
 if (typeof window !== 'undefined' && window.localStorage) {
+  // Clear all candle cache to force fresh data with time sync
   const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('candles:'));
   if (cacheKeys.length > 0) {
-    console.log(`[Cache] Clearing ${cacheKeys.length} old cache entries to apply time sync`);
+    console.log(`[Cache] Clearing ${cacheKeys.length} cache entries to apply time sync`);
     cacheKeys.forEach(key => localStorage.removeItem(key));
   }
+  // Also clear any old data that might be cached
+  console.log('[Time Sync] Current ET time:', new Date(Date.now()).toLocaleString('en-US', { timeZone: 'America/New_York' }));
 }
 
 const TabLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
