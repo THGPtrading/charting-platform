@@ -312,7 +312,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
     }
 
     // Live candle animation
-    let animationFrame: number;
+    let animationInterval: number;
     if (liveCandleState.current && mainSeriesRef.current) {
       const animate = () => {
         if (liveCandleState.current && mainSeriesRef.current) {
@@ -336,13 +336,13 @@ const TrendChart: React.FC<TrendChartProps> = ({ candles, timeframe, syncGroup, 
             });
           } catch (e) { /* ignore */ }
         }
-        animationFrame = requestAnimationFrame(animate);
       };
-      animationFrame = requestAnimationFrame(animate);
+      // Update every 500ms instead of every frame
+      animationInterval = window.setInterval(animate, 500);
     }
 
     return () => { 
-      if (animationFrame) cancelAnimationFrame(animationFrame);
+      if (animationInterval) clearInterval(animationInterval);
       window.removeEventListener('resize', handleResize);
       resizeObserver.disconnect();
       try { unsub(); chart.remove(); } catch {} 

@@ -26,8 +26,8 @@ export function updateLiveCandle(
   // Calculate how far we are through the current candle interval (0-1)
   const progress = Math.min((elapsed % intervalSeconds) / intervalSeconds, 0.99);
   
-  // Calculate the ET timestamp for this moment
-  const currentET = state.etStartTime + Math.floor(elapsed);
+  // Keep the same timestamp as the base candle - we're updating it, not creating a new one
+  const candleTime = state.baseCandle.time;
   
   // Animate the close price with a sine wave for smooth, realistic movement
   // Amplitude decreases as we get closer to interval end to simulate price settling
@@ -44,7 +44,7 @@ export function updateLiveCandle(
   const currentVolume = Math.floor(baseVolume * progress);
   
   return {
-    time: currentET,
+    time: candleTime,
     open: state.baseCandle.open,
     high: currentHigh,
     low: currentLow,
