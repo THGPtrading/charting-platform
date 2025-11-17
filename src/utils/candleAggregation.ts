@@ -50,6 +50,13 @@ export function aggregateCandles(
     });
   }
   
+  // Log aggregation results for debugging
+  if (result.length > 0) {
+    const lastCandle = result[result.length - 1];
+    console.log(`[Aggregation ${timeframe}] Created ${result.length} candles from ${minuteCandles.length} 1-min bars`);
+    console.log(`[Aggregation ${timeframe}] Last candle: O:${lastCandle.open.toFixed(2)} H:${lastCandle.high.toFixed(2)} L:${lastCandle.low.toFixed(2)} C:${lastCandle.close.toFixed(2)} V:${lastCandle.volume}`);
+  }
+  
   return result;
 }
 
