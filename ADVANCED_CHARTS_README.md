@@ -7,10 +7,22 @@ This document captures the plan and required steps to enable TradingView Advance
   - `ChartHost` uses TradingView when `REACT_APP_USE_TV=1`, otherwise falls back to `TrendChart` (lightweight-charts v5).
 - A minimal UDF-compatible datafeed is scaffolded:
   - Client: `src/integrations/tvDatafeedClient.ts`
-  - Server: `tools/tv-datafeed-server.js` (Express, mock OHLCV)
+  - Server: `tools/tv-datafeed-server.js` (Express, Polygon-backed with mock fallback)
+  - Serverless API: `/api/tv/time`, `/api/tv/symbols`, `/api/tv/history` (Vercel-deployed)
   - `TradingViewChart.tsx` is set to use `http://localhost:8081/api/tv` for the datafeed.
+- **Real-time sync**: All chart data is automatically time-shifted to appear synchronized with Eastern Time but offset by 24 hours, creating a streaming real-time effect with yesterday's data. This applies to both Polygon data and mock data.
 - Strategy schema + seeds available in `src/types/Strategy.ts` and `src/config/strategies.ts`.
 - ChartEye stub engine available in `src/integrations/charteye.ts` and wired to dashboards (signals appear in Feed/Review).
+
+## Time Synchronization
+Charts are synchronized to **Eastern Time (ET)** with a **24-hour offset** to simulate real-time streaming:
+- Historical data timestamps are shifted so the most recent data point appears at (current ET time - 24 hours)
+- This creates a realistic streaming chart effect while using historical data
+- Time sync is handled automatically by `src/utils/timeSync.ts` and applied in:
+  - `fetchPolygonCandles()` - shifts all Polygon API data
+  - Mock data generators - shifts fallback data
+  - UDF endpoints (`/api/tv/history`, local server) - shifts TradingView datafeed
+- The `/time` endpoint returns current ET timestamp for proper chart synchronization
 
 ## What You’ll Provide
 1. TradingView Advanced Charts (Charting Library) license and library bundle (`/charting_library` directory).
