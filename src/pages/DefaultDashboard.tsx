@@ -22,9 +22,31 @@ const DefaultDashboard: React.FC = () => {
 
   const latestSetup: ICCSetup | undefined = filteredSetups.slice(-1)[0];
 
+  // --- NEW summary counts ---
+  const totalSetups = filteredSetups.length;
+  const momentumCount = filteredSetups.filter(s => s.dashboard === 'MomentumEdge').length;
+  const trendCount = filteredSetups.filter(s => s.dashboard === 'TrendEdge').length;
+  const warriorCount = filteredSetups.filter(s => s.dashboard === 'WarriorEdge').length;
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>📊 THGP Trade Stategy Summary</h1>
+    <div style={{ padding: '2rem', backgroundColor: '#121212', color: '#e0e0e0', minHeight: '100vh' }}>
+      <h1 style={{ textAlign: 'center' }}>📊 THGP Trade Strategy Summary</h1>
+
+      {/* Summary Counters */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', margin: '1rem 0' }}>
+        <div style={{ padding: '1rem', border: '1px solid #444', borderRadius: '6px' }}>
+          <strong>Total Setups:</strong> {totalSetups}
+        </div>
+        <div style={{ padding: '1rem', border: '1px solid #444', borderRadius: '6px' }}>
+          <strong>MomentumEdge:</strong> {momentumCount}
+        </div>
+        <div style={{ padding: '1rem', border: '1px solid #444', borderRadius: '6px' }}>
+          <strong>TrendEdge:</strong> {trendCount}
+        </div>
+        <div style={{ padding: '1rem', border: '1px solid #444', borderRadius: '6px' }}>
+          <strong>WarriorEdge:</strong> {warriorCount}
+        </div>
+      </div>
 
       {/* Filters */}
       <div style={{ marginBottom: '1rem' }}>
@@ -63,6 +85,7 @@ const DefaultDashboard: React.FC = () => {
             <LightweightChart
               data={latestSetup.data.map(d => ({ time: d.time, value: d.close }))}
               overlays={{ triggers: [latestSetup] }}
+              timeframe="15 Min"
             />
           ) : (
             <p>No setups available yet.</p>
@@ -70,6 +93,7 @@ const DefaultDashboard: React.FC = () => {
         </ErrorBoundary>
       </div>
 
+      {/* Setup Components */}
       <SetupFeed entries={filteredSetups} dashboard="Filtered" />
       <SetupReview entries={filteredSetups} dashboard="Filtered" />
       <SetupExport entries={filteredSetups} dashboard="Filtered" />

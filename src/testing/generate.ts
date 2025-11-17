@@ -1,23 +1,21 @@
 // src/testing/generate.ts
-import type { ICCSetup, SetupDataPoint } from '../types/ICC';
+import type { ICCSetup, SetupDataPoint } from "../types/ICC";
 
 export function generateSetups(count: number): ICCSetup[] {
   const setups: ICCSetup[] = [];
   for (let i = 0; i < count; i++) {
-    const symbol = ['AMD', 'NVDA', 'META'][i % 3];
-    const timeframe = ['1m', '5m', '15m'][i % 3];
-    const iccTags = ['Breakout'];
+    const symbol = ["AAPL", "MSFT", "NVDA"][i % 3];
+    const timeframe = "15m";
+    const iccTags = ["Swing"];
     const priceAtTrigger = 100 + i;
-    const outcome = 'Pending';
-    const timeBlock = 'Regular';
-    const dashboard = 'MomentumEdge';
-    const bot = 'TestBot';
-    const timestamp = new Date(Date.now() - i * 60000).toISOString();
-
-    const data: SetupDataPoint[] = Array.from({ length: 20 }, (_, k) => ({
-      time: Math.floor(Date.now() / 1000) - k * 60,
-      close: priceAtTrigger + Math.sin(k / 5) * 0.5,
-    }));
+    const outcome = "Pending";
+    const timeBlock = "Morning";
+    const bot = "TestBot";
+    const dashboard = "TrendEdge";
+    const timestamp = new Date().toISOString();
+    const data: SetupDataPoint[] = [
+      { time: Math.floor(Date.now() / 1000), close: priceAtTrigger },
+    ];
 
     setups.push({
       symbol,
@@ -30,6 +28,7 @@ export function generateSetups(count: number): ICCSetup[] {
       dashboard,
       timestamp,
       data,
+      source: "TestGenerator", // ✅ required
     });
   }
   return setups;

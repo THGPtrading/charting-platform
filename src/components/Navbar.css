@@ -4,9 +4,6 @@ import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-do
 import TrendEdge from "./pages/TrendEdge";
 import MomentumEdge from "./pages/MomentumEdge";
 import WarriorEdge from "./pages/WarriorEdge";
-import DefaultDashboard from "./pages/DefaultDashboard";
-import ICCTracker from "./pages/ICCTracker";
-import ICCPage from "./pages/ICCPage";
 
 const TabLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
   <NavLink
@@ -25,9 +22,6 @@ const TabLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
 );
 
 const App: React.FC = () => {
-  const isProd = process.env.NODE_ENV === "production";
-  const showInternal = !isProd || process.env.REACT_APP_SHOW_INTERNAL === "1";
-  const defaultRoute = isProd ? "/trendedge" : "/summary";
   return (
     <BrowserRouter>
       <div style={{ backgroundColor: "#121212", minHeight: "100vh" }}>
@@ -45,24 +39,18 @@ const App: React.FC = () => {
             zIndex: 10,
           }}
         >
-          {showInternal && <TabLink to="/summary" label="THGP Strategy Summary" />}
           <TabLink to="/trendedge" label="TrendEdge" />
           <TabLink to="/momentumedge" label="MomentumEdge" />
           <TabLink to="/warrioredge" label="WarriorEdge" />
-          {showInternal && <TabLink to="/icctracker" label="ICC Tracker" />}
-          {showInternal && <TabLink to="/iccpage" label="ICC Page" />}
         </nav>
 
         <div style={{ padding: "1rem" }}>
           <Routes>
-            <Route path="/" element={<Navigate to={defaultRoute} replace />} />
-            {showInternal && <Route path="/summary" element={<DefaultDashboard />} />}
+            <Route path="/" element={<Navigate to="/trendedge" replace />} />
             <Route path="/trendedge" element={<TrendEdge />} />
             <Route path="/momentumedge" element={<MomentumEdge />} />
             <Route path="/warrioredge" element={<WarriorEdge />} />
-            {showInternal && <Route path="/icctracker" element={<ICCTracker />} />}
-            {showInternal && <Route path="/iccpage" element={<ICCPage />} />}
-            <Route path="*" element={<Navigate to={defaultRoute} replace />} />
+            <Route path="*" element={<Navigate to="/trendedge" replace />} />
           </Routes>
         </div>
       </div>

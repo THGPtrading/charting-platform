@@ -1,52 +1,32 @@
-// src/alerts/setupClassifier.ts
-import { generateTags } from './tagGenerator';
-import type { ICCSetup } from '../types/ICC';
+import type { ICCSetup } from "../types/ICC";
+import { generateTags } from "./tagGenerator";
 
 export const classifySetup = (alert: Partial<ICCSetup>): ICCSetup => {
   const { priceAction, volume, timeBlock } = alert;
-  const tags: string[] = [];
 
-  if (priceAction === 'gap-retest' && volume && volume > 100000) {
-    tags.push('scalp-ready');
-  }
-  if (priceAction === 'breakout' && volume && volume > 250000) {
-    tags.push('momentum-confirmed');
-  }
-  if (priceAction === 'zone-retest' && timeBlock === 'midday') {
-    tags.push('swing-zone');
+  const tags: string[] = [];
+  if (priceAction === "gap-retest" && volume && volume > 100000) {
+    tags.push("GapRetest");
   }
 
   const classified: ICCSetup = {
-    symbol: alert.symbol ?? 'UNKNOWN',
-    timeframe: alert.timeframe ?? '5m',
-    iccTags: tags,
-    priceAtTrigger: alert.priceAtTrigger ?? 0,
-    outcome: alert.outcome ?? 'Pending',
-    timeBlock: alert.timeBlock ?? 'Regular',
-    dashboard: alert.dashboard ?? 'DefaultDashboard',
+    symbol: alert.symbol ?? "Unknown",
+    timeframe: alert.timeframe ?? "Unknown",
+    source: alert.source ?? "UnknownSource",
+    dashboard: alert.dashboard ?? "DefaultDashboard",
     timestamp: alert.timestamp ?? new Date().toISOString(),
-    bot: alert.bot,
+    bot: alert.bot ?? "UnknownBot",
     capSize: alert.capSize,
     traded: alert.traded,
-    source: alert.source,
-    classifiedAt: new Date().toISOString(),
-    tradervueTags: generateTags({
-      ...(alert as ICCSetup),
-      iccTags: tags,
-      symbol: alert.symbol ?? 'UNKNOWN',
-      timeframe: alert.timeframe ?? '5m',
-      priceAtTrigger: alert.priceAtTrigger ?? 0,
-      outcome: alert.outcome ?? 'Pending',
-      timeBlock: alert.timeBlock ?? 'Regular',
-      dashboard: alert.dashboard ?? 'DefaultDashboard',
-      timestamp: alert.timestamp ?? new Date().toISOString(),
-    }),
-    followThrough: null,
-    maxGain: null,
-    maxLoss: null,
     priceAction,
     volume,
-    data: alert.data,
+    outcome: alert.outcome ?? "Pending",
+    priceAtTrigger: alert.priceAtTrigger ?? 0,
+    data: alert.data ?? [],
+    classifiedAt: new Date().toISOString(),
+    tradervueTags: generateTags({ ...(alert as ICCSetup) }),
+    iccTags: alert.iccTags ?? tags,
+    timeBlock: timeBlock ?? "Regular",
   };
 
   return classified;
